@@ -154,7 +154,7 @@ if __name__ == '__main__':
         proxy = proxy.split(':')
         proxy[2] = int(proxy[2])
         if len(proxy) == 5:
-            proxy[5] = False if proxy[5].lower() == 'false' else True
+            proxy[4] = False if proxy[4].lower() == 'false' else True
         proxy = tuple(proxy)
 
     Checkin(api_id, api_hash, proxy=proxy).start()
