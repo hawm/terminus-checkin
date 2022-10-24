@@ -150,7 +150,7 @@ if __name__ == '__main__':
     if proxy:
         # proxy string must splite with colon
         # socks5:127.0.0.1:80
-        # socks5:127.0.0.1:username:password:rdns
+        # socks5:127.0.0.1:80:username:password:rdns
         proxy = proxy.split(':')
         proxy[2] = int(proxy[2])
         if len(proxy) == 5:
