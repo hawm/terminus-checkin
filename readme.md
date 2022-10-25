@@ -20,7 +20,7 @@ docker build -t terminus-checkin .
 
 ### 3. Checkin by run the image
 
-Run the image will do the checkin
+Run the image will do the checkin, the first checkin needs to signing in by entering the phone number and code.
 
 ```sh
 docker run -it -v sessions:/app/sessions --rm terminus-checkin name api_id api_hash [proxy]
@@ -46,6 +46,8 @@ All about the command we run above:
 
 
 ### 4. Automatically
+
+NOTES: Before automatize it, you need to signing in once by running it manually and then entering the phone number and code.
 
 The Terminus will refresh the checkin state at every midnight of UTC+8. So combine this tool with Corntab so that we can checkin every day automatically.
 
