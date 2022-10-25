@@ -3,6 +3,7 @@
 import logging
 from asyncio import sleep
 from sys import argv
+import sys
 from typing import Any
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     else:
         print('Arguments number must be 3 or 4')
         print('Usage: python checkin.py name api_id api_hash [proxy]')
-        exit(1)
+        sys.exit(1)
 
     name, api_id, api_hash, proxy = args
 
@@ -154,6 +155,9 @@ if __name__ == '__main__':
         # socks5:127.0.0.1:80
         # socks5:127.0.0.1:80:username:password:rdns
         proxy = proxy.split(':')
+        if len(proxy) < 3:
+            print("Proxy string incomplete")
+            sys.exit(1)
         proxy[2] = int(proxy[2])
         if len(proxy) == 5:
             proxy[4] = not bool(proxy[4].lower() == 'false')
