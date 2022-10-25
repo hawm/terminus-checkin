@@ -67,7 +67,7 @@ class Checkin():
         try:
             async with self.client:
                 self.logger.info('Telegram authed')
-                await self.start_checkin()
+                await self._checkin()
                 # wait for events
                 await sleep(self._timeout)
         except (KeyboardInterrupt, EOFError):
