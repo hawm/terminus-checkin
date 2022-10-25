@@ -1,13 +1,14 @@
 """Terminus Checkin
 """
 import logging
-from asyncio import sleep
-from sys import argv
 import sys
+from asyncio import sleep
 from typing import Any
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
+from telethon.errors.rpcerrorlist import PhoneNumberInvalidError, FloodWaitError
 import ddddocr
+
 
 BOT_USERNAME = 'EmbyPublicBot'
 
@@ -52,11 +53,10 @@ class Checkin():
         self._retry_count = 0
         self.logger = self.get_logger('Checkin')
         client = TelegramClient(f'sessions/{name}', app_id,
-                                app_hash, proxy=proxy)   # type: ignore
+                                app_hash, proxy=proxy)  # type: ignore
         # client.add_event_handler(self.test)
         self.add_event_handler(client, self)
         self.client = client
-        self._canceled = False
 
     def start(self):
         '''Run checkin'''
@@ -64,11 +64,19 @@ class Checkin():
 
     async def _start(self):
         self.logger.info('Checkin start')
-        async with self.client:
-            await self.start_checkin()
-            # wait for events
-            await sleep(self._timeout)
-        self.logger.info('Checkin end')
+        try:
+            async with self.client:
+                self.logger.info('Telegram authed')
+                await self.start_checkin()
+                # wait for events
+                await sleep(self._timeout)
+        except (KeyboardInterrupt, EOFError):
+            print('\n')
+            self.logger.warning('Auth cancel')
+        except Exception as error:
+            self.logger.error(error)
+        finally:
+            self.logger.info('Checkin end')
 
     async def _retry(self):
         if self._retry_count < self._max_retry:
@@ -135,7 +143,7 @@ class Checkin():
 
 
 if __name__ == '__main__':
-    args: list[Any] = argv[1:]
+    args: list[Any] = sys.argv[1:]
     argc = len(args)
     if argc == 3:
         args.append(None)
