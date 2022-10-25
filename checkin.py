@@ -88,11 +88,11 @@ class Checkin():
         else:
             self.logger.error('Max retry occured!')
 
-    async def start_checkin(self):
-        '''Start checkin by cancel existed session'''
-        await self.cancel()
+    async def _checkin(self):
+        '''Start checkin by cancel any existed session'''
+        await self._cancel()
 
-    async def cancel(self):
+    async def _cancel(self):
         '''Send cancel message'''
         self.logger.info('Send cancel message')
         await self.client.send_message(BOT_USERNAME, self.CANCEL_MESSAGE)
@@ -117,7 +117,7 @@ class Checkin():
             await message.respond(text)
         else:
             self.logger.error('Captcha image not found!')
-            await self.cancel()
+            await self._retry()
 
     async def _async_parse_image(self, img: bytes) -> str:
         self.logger.debug('Image parsing')
