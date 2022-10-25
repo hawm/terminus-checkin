@@ -139,10 +139,10 @@ if __name__ == '__main__':
     argc = len(args)
     if argc == 3:
         args.append(None)
-    if argc > 3:
+    elif argc > 3:
         pass
     else:
-        print('Arguments number must be 3 or 4')
+        print(f'Arguments number must be 3 or 4, but got {argc}')
         print('Usage: python checkin.py name api_id api_hash [proxy]')
         sys.exit(1)
 
