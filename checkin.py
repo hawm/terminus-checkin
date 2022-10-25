@@ -159,7 +159,7 @@ if __name__ == '__main__':
     api_id = int(api_id, 10)
 
     if proxy:
-        # proxy string must splite with colon
+        # proxy string must split with colon
         # socks5:127.0.0.1:80
         # socks5:127.0.0.1:80:username:password:rdns
         proxy = proxy.split(':')
