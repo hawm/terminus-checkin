@@ -43,14 +43,14 @@ class Checkin():
         logger.addHandler(ch)
         return logger
 
-    def __init__(self, app_id: int, app_hash: str,
+    def __init__(self, name: str, app_id: int, app_hash: str,
                  proxy: tuple | dict | None = None):
         self._timeout = 15
         self._retry_interval = 15
         self._max_retry = 3
         self._retry_count = 0
         self.logger = self.get_logger('Checkin')
-        client = TelegramClient('Autocheckin', app_id,
+        client = TelegramClient(f'sessions/{name}', app_id,
                                 app_hash, proxy=proxy)   # type: ignore
         # client.add_event_handler(self.test)
         self.add_event_handler(client, self)
@@ -135,16 +135,18 @@ class Checkin():
 
 if __name__ == '__main__':
     args: list[Any] = argv[1:]
-    args_count = len(args)
-    if args_count == 2:
+    argc = len(args)
+    if argc == 3:
         args.append(None)
-    if args_count > 2:
+    if argc > 3:
         pass
     else:
-        print('Arguments number must be 2 or 3')
+        print('Arguments number must be 3 or 4')
+        print('Usage: python checkin.py name api_id api_hash [proxy]')
         exit(1)
 
-    api_id, api_hash, proxy = args
+    name, api_id, api_hash, proxy = args
+
     api_id = int(api_id, 10)
 
     if proxy:
@@ -157,4 +159,4 @@ if __name__ == '__main__':
             proxy[4] = False if proxy[4].lower() == 'false' else True
         proxy = tuple(proxy)
 
-    Checkin(api_id, api_hash, proxy=proxy).start()
+    Checkin(name, api_id, api_hash, proxy=proxy).start()
