@@ -45,7 +45,7 @@ All about the command we run above:
 `socks:127.0.0.1:1080` or `socks:127.0.0.1:username:password:rdns`, [more info](https://docs.telethon.dev/en/stable/basic/signing-in.html#signing-in-behind-a-proxy).
 
 
-### 4. Automatically
+### 4. Automatize with Crontab
 
 NOTES: Before automatize it, you need to signing in once by running it manually and then entering the phone number and code.
 
