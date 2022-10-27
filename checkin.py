@@ -147,7 +147,7 @@ if __name__ == '__main__':
     argc = len(args)
     if argc == 3:
         args.append(None)
-    elif argc > 3:
+    elif argc == 4:
         pass
     else:
         print(f'Arguments number must be 3 or 4, but got {argc}')
