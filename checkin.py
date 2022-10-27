@@ -85,13 +85,15 @@ class Checkin():
             await sleep(self._retry_interval)
             self._retry_count -= 1
             self.logger.info('The %s retry start', self._retry_count)
-            await self._start()
+            await self._checkin()
         else:
             self.logger.error('Max retry occured!')
 
     async def _checkin(self):
         '''Start checkin by cancel any existed session'''
         await self._cancel()
+        # wait for events
+        await sleep(self._timeout)
 
     async def _cancel(self):
         '''Send cancel message'''
