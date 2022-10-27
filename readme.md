@@ -49,7 +49,7 @@ All about the command we run above:
 
 NOTES: Before automatize it, you need to signing in once by running it manually and then entering the phone number and code.
 
-The Terminus will refresh the checkin state at every midnight of UTC+8. So combine this tool with Corntab so that we can checkin every day automatically.
+The Terminus will refresh the checkin state at every midnight of UTC+8. So combine this tool with Crontab so that we can checkin every day automatically.
 
 For example, add the below content to Crontab: 
 
