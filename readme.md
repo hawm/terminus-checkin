@@ -63,4 +63,5 @@ It will do the checkin every day at `05:00` based on your system timezone.
 ## Notes
 
 - Signing in many times in a short time may be blocked by Telegram then you will need to wait a long time to be unblocked (about 80000 seconds to wait, I've been blocked when developing this tool, not sure if it blocked IP address only).
+- If your account is banned(not the situation mentioned above), please see https://core.telegram.org/api/obtaining_api_id#using-the-api-id
 - Checkin many times in a short time may be blocked by Terminus Telegram Bot
