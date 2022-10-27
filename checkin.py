@@ -68,11 +68,12 @@ class Checkin():
             async with self.client:
                 self.logger.info('Telegram authed')
                 await self._checkin()
-                # wait for events
-                await sleep(self._timeout)
-        except (KeyboardInterrupt, EOFError):
+        except KeyboardInterrupt:
             print('\n')
-            self.logger.warning('Auth cancel')
+            self.logger.warning('Stop by user')
+        except EOFError:
+            print('\n')
+            self.logger.warning('Stop by system')
         except Exception as error:
             self.logger.error(error)
         finally:
