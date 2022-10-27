@@ -166,8 +166,9 @@ if __name__ == '__main__':
         # socks5:127.0.0.1:80
         # socks5:127.0.0.1:80:username:password:rdns
         proxy = proxy.split(':')
-        if len(proxy) < 3:
-            print("Proxy string incomplete")
+        proxyc = len(proxy)
+        if proxyc < 3 or proxyc > 5:
+            print('Proxy string incomplete')
             sys.exit(1)
         proxy[2] = int(proxy[2])
         if len(proxy) == 5:
