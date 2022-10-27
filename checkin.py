@@ -6,7 +6,6 @@ from asyncio import sleep
 from typing import Any
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
-from telethon.errors.rpcerrorlist import PhoneNumberInvalidError, FloodWaitError
 import ddddocr
 
 
@@ -54,7 +53,6 @@ class Checkin():
         self.logger = self.get_logger('Checkin')
         client = TelegramClient(f'sessions/{name}', app_id,
                                 app_hash, proxy=proxy)  # type: ignore
-        # client.add_event_handler(self.test)
         self.add_event_handler(client, self)
         self.client = client
 
