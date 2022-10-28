@@ -51,10 +51,10 @@ NOTES: Before automatize it, you need to signing in once by running it manually 
 
 The Terminus will refresh the checkin state at every midnight of UTC+8. So combine this tool with Crontab so that we can checkin every day automatically.
 
-For example, add the below content to Crontab: 
+For example, add the below content to Crontab, please note without the `-it` option: 
 
 ```sh
-0 5 * * * docker run -it -v sessions:/app/sessions --rm terminus-checkin name api_id api_hash [proxy]
+0 5 * * * docker run -v sessions:/app/sessions --rm terminus-checkin name api_id api_hash [proxy]
 ```
 
 It will do the checkin every day at `05:00` based on your system timezone.
