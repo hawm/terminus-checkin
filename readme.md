@@ -59,6 +59,30 @@ For example, add the below content to Crontab, please note without the `-it` opt
 
 It will do the checkin every day at `05:00` based on your system timezone.
 
+### 5. Logging(Optional)
+
+You will want to know if the checkin state is fine, you can check your Telegram message or check the logs of this tool.
+
+The tool is run by crontab, so we should check the crontab's log and it's at `/var/log/syslog` by default. But you know it's confused with other system logs.
+
+So we redirect it to our custom log file. By tail the whole command with:
+```
+>> /var/log/terminus-checkin.log 2>&1
+```
+
+### 6. Config Time(Optional)
+
+After completing all the above steps, it works. But you will find this checkin tool logging at the wrong time.
+
+That's because the dockerfile doesn't specify a timezone so it's from the original Python image.
+
+You can specify it at runtime by bind mount the host time:
+
+```sh
+-v /etc/timezone:/etc/timezone:ro \
+-v /etc/localtime:/etc/localtime:ro
+```
+
 
 ## Notes
 
