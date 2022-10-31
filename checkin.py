@@ -50,6 +50,7 @@ class Checkin():
         self._retry_interval = 15
         self._max_retry = 3
         self._retry_count = 0
+        self._has_retry = False
         self.logger = self.get_logger('Checkin')
         client = TelegramClient(f'sessions/{name}', app_id,
                                 app_hash, proxy=proxy)  # type: ignore
@@ -77,11 +78,19 @@ class Checkin():
         finally:
             self.logger.info('Checkin end')
 
+    def _set_retry(self):
+        self._has_retry = True
+
     async def _retry(self):
+        if not self._has_retry:
+            return
+        else:
+            self._has_retry = False
+
         if self._retry_count < self._max_retry:
             self.logger.info('Wait %ss to retry', self._retry_interval)
             await sleep(self._retry_interval)
-            self._retry_count -= 1
+            self._retry_count += 1
             self.logger.info('The %s retry start', self._retry_count)
             await self._checkin()
         else:
@@ -92,6 +101,7 @@ class Checkin():
         await self._cancel()
         # wait for events
         await sleep(self._timeout)
+        await self._retry()
 
     async def _cancel(self):
         '''Send cancel message'''
@@ -118,7 +128,7 @@ class Checkin():
             await message.respond(text)
         else:
             self.logger.error('Captcha image not found!')
-            await self._retry()
+            self._set_retry()
 
     async def _async_parse_image(self, img: bytes) -> str:
         self.logger.debug('Image parsing')
@@ -130,7 +140,7 @@ class Checkin():
     async def _checkin_failed(self, event: events.NewMessage.Event):
         '''Handle checkin failed'''
         self.logger.info('Checkin failed')
-        await self._retry()
+        self._set_retry()
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*你今天已经签到过了'))
     async def _checkin_already(self, event: events.NewMessage.Event):
@@ -141,6 +151,10 @@ class Checkin():
     async def _checkin_succeed(self, event: events.NewMessage.Event):
         '''Handle checkin succeed'''
         self.logger.info('Checkin succeed')
+
+    @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*请勿高频使用厂妹'))
+    async def _checkin_block(self, event):
+        self.logger.warning('Checkin blocked')
 
 
 if __name__ == '__main__':
