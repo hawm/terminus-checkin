@@ -183,7 +183,7 @@ if __name__ == '__main__':
             print('Proxy string incomplete')
             sys.exit(1)
         proxy[2] = int(proxy[2])
-        if len(proxy) == 5:
+        if proxyc == 5:
             proxy[4] = not bool(proxy[4].lower() == 'false')
         proxy = tuple(proxy)
 
