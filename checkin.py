@@ -120,15 +120,20 @@ class Checkin():
         self.logger.info('Recive captcha message')
         message: Message = event.message
         image = await message.download_media(file=bytes)
-        if image:
-            self.logger.info('Captcha image found')
-            text = await self._async_parse_image(image)
-            self.logger.info('Captcha recongized')
-            self.logger.info('Send captcha verify message')
-            await message.respond(text)
-        else:
+        if not image:
             self.logger.error('Captcha image not found!')
             self._set_retry()
+            return
+        self.logger.info('Captcha image found')
+        text = await self._async_parse_image(image)
+        if text.startswith('/'):
+            self.logger.info('Captcha recongize error: start with `/`')
+            self._set_retry()
+            return
+        self.logger.info('Captcha recongized')
+        self.logger.info('Send captcha verify message')
+        await message.respond(text)
+
 
     async def _async_parse_image(self, img: bytes) -> str:
         self.logger.debug('Image parsing')
