@@ -8,28 +8,17 @@ from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
 import ddddocr
 
-
 BOT_USERNAME = 'EmbyPublicBot'
 
 
-class Checkin():
+class TerminusCheckin():
     '''Terminus Checkin'''
-    CHECKIN_MESSAGE = '/checkin'
-    CANCEL_MESSAGE = '/cancel'
-
     @staticmethod
-    def add_event_handler(client: TelegramClient, checkin: object):
-        '''Add instace checkin event handler to client'''
-        for attr in dir(checkin):
-            if attr.startswith('_checkin_') and callable(getattr(checkin, attr)):
-                client.add_event_handler(getattr(checkin, attr))
-
-    @staticmethod
-    def parse_image(img: bytes) -> str:
-        '''Parse checkin image'''
+    def img2txt(img: bytes) -> str:
+        '''Recogize captcha image to text'''
         ocr = ddddocr.DdddOcr(show_ad=False)
-        res = ocr.classification(img)
-        return res
+        text = ocr.classification(img)
+        return text
 
     @staticmethod
     def get_logger(name: str):
@@ -44,32 +33,54 @@ class Checkin():
         logger.addHandler(ch)
         return logger
 
+    CHECKIN_MESSAGE = '/checkin'
+    CANCEL_MESSAGE = '/cancel'
+
+    timeout = 15
+    retry_interval = 30
+    retry_max = 5
+
+    _retry_count = 0
+    _retry_flag = False
+
     def __init__(self, name: str, app_id: int, app_hash: str,
                  proxy: tuple | dict | None = None):
-        self._timeout = 15
-        self._retry_interval = 15
-        self._max_retry = 3
-        self._retry_count = 0
-        self._has_retry = False
-        self.logger = self.get_logger('Checkin')
-        client = TelegramClient(f'sessions/{name}', app_id,
-                                app_hash, proxy=proxy)  # type: ignore
-        self.add_event_handler(client, self)
-        self.client = client
+        self.logger = self.get_logger('Terminus Checkin')
+        self.logger.debug('Logger setup')
+        self.logger.debug('Init Telegram client')
+        self.client = TelegramClient(f'./sessions/{name}', app_id,
+                                     app_hash, proxy=proxy)  # type: ignore
+        self._load_event_handler()
+
+    def _load_event_handler(self):
+        '''Add event handler to client'''
+        self.logger.debug('Load event handlers')
+        for name in dir(self):
+            attr = getattr(self, name)
+            if events.is_handler(attr):
+                self.logger.debug('Load event handler %s', name)
+                self.client.add_event_handler(attr)
+        self.logger.debug('Load event handlers finished')
+
+    async def _async_img2txt(self, img: bytes) -> str:
+        self.logger.debug('Image parsing')
+        text = await self.client.loop.run_in_executor(None, self.img2txt, img)
+        self.logger.debug('Image recogize as %s', text)
+        return text
 
     def start(self):
-        '''Run checkin'''
+        '''Start checkin'''
         self.client.loop.run_until_complete(self._start())
 
     async def _start(self):
         self.logger.info('Checkin start')
         try:
             async with self.client:
-                self.logger.info('Telegram authed')
+                self.logger.info('Authed Telegram account')
                 await self._checkin()
         except KeyboardInterrupt:
             print('\n')
-            self.logger.warning('Stop by user')
+            self.logger.info('Stop by user')
         except EOFError:
             print('\n')
             self.logger.warning('Stop by system')
@@ -78,95 +89,90 @@ class Checkin():
         finally:
             self.logger.info('Checkin end')
 
-    def _set_retry(self):
-        self._has_retry = True
+    async def _set_retry(self):
+        self.logger.info('Retry flag has been set')
+        self._retry_flag = True
 
     async def _retry(self):
-        if not self._has_retry:
+        if not self._retry_flag:
             return
-        else:
-            self._has_retry = False
+        self._retry_flag = False
 
-        if self._retry_count < self._max_retry:
-            self.logger.info('Wait %ss to retry', self._retry_interval)
-            await sleep(self._retry_interval)
+        if self._retry_count < self.retry_max:
+            self.logger.info('Wait %ss to retry', self.retry_interval)
+            await sleep(self.retry_interval)
             self._retry_count += 1
             self.logger.info('The %s retry start', self._retry_count)
             await self._checkin()
         else:
-            self.logger.error('Max retry occured!')
+            self.logger.warning('Max retry exceeded')
 
     async def _checkin(self):
-        '''Start checkin by cancel any existed session'''
+        '''Start checkin by cancel any existing session'''
         await self._cancel()
         # wait for events
-        await sleep(self._timeout)
+        await sleep(self.timeout)
+        # do possible retry
         await self._retry()
 
     async def _cancel(self):
-        '''Send cancel message'''
+        '''Cancel any existing session'''
         self.logger.info('Send cancel message')
         await self.client.send_message(BOT_USERNAME, self.CANCEL_MESSAGE)
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*(会话已取消|无需清理)'))
     async def _checkin_start(self, event: events.NewMessage.Event):
-        self.logger.info('Recive session clear message')
+        '''Trigger checkin process'''
+        self.logger.info('Receive session cleared message')
         self.logger.info('Send checkin message')
         await event.message.respond(self.CHECKIN_MESSAGE)
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*输入签到验证码'))
     async def _checkin_verify(self, event: events.NewMessage.Event):
-        '''Handle checkin verify'''
-        self.logger.info('Recive captcha message')
+        self.logger.info('Receive captcha message')
         message: Message = event.message
         image = await message.download_media(file=bytes)
         if not image:
-            self.logger.error('Captcha image not found!')
+            self.logger.info('Captcha image not found')
             self._set_retry()
             return
         self.logger.info('Captcha image found')
-        text = await self._async_parse_image(image)
+        text = await self._async_img2txt(image)
         if text.startswith('/'):
-            self.logger.info('Captcha recongize error: start with `/`')
+            self.logger.info('Captcha recogize error: start with `/`')
             self._set_retry()
             return
-        self.logger.info('Captcha recongized')
+        self.logger.info('Captcha recogized')
         self.logger.info('Send captcha verify message')
         await message.respond(text)
 
-
-    async def _async_parse_image(self, img: bytes) -> str:
-        self.logger.debug('Image parsing')
-        res = await self.client.loop.run_in_executor(None, self.parse_image, img)
-        self.logger.debug('Image recongize as %s', res)
-        return res
-
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*签到验证码输入错误或超时'))
     async def _checkin_failed(self, event: events.NewMessage.Event):
-        '''Handle checkin failed'''
+        self.logger.info('Receive captcha mismatch or timeout message')
         self.logger.info('Checkin failed')
         self._set_retry()
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*你今天已经签到过了'))
     async def _checkin_already(self, event: events.NewMessage.Event):
-        '''Handle checkin already'''
+        self.logger.info('Receive checkin already message')
         self.logger.info('Checkin already')
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*签到成功'))
     async def _checkin_succeed(self, event: events.NewMessage.Event):
-        '''Handle checkin succeed'''
+        self.logger.info('Receive checkin success message')
         self.logger.info('Checkin succeed')
 
     @events.register(events.NewMessage(chats=BOT_USERNAME, pattern='.*请勿高频使用厂妹'))
-    async def _checkin_block(self, event):
-        self.logger.warning('Checkin blocked')
+    async def _checkin_banned(self, event: events.NewMessage.Event):
+        self.logger.info('Receive checkin banned message')
+        self.logger.info('Checkin banned')
 
 
 if __name__ == '__main__':
-    args: list[Any] = sys.argv[1:]
+    args = sys.argv[1:]
     argc = len(args)
     if argc == 3:
-        args.append(None)
+        args.append('')
     elif argc == 4:
         pass
     else:
@@ -177,19 +183,20 @@ if __name__ == '__main__':
     name, api_id, api_hash, proxy = args
 
     api_id = int(api_id, 10)
+    proxyt = None
 
     if proxy:
-        # proxy string must split with colon
-        # socks5:127.0.0.1:80
-        # socks5:127.0.0.1:80:username:password:rdns
-        proxy = proxy.split(':')
-        proxyc = len(proxy)
-        if proxyc < 3 or proxyc > 5:
-            print('Proxy string incomplete')
+        proxyl: list[Any] = proxy.split(':')
+        proxyc = len(proxyl)
+        if proxyc not in range(3, 6):
+            print('Proxy string invalid')
+            print('Must split with colons and at least 3 component')
+            print('socks5:127.0.0.1:1080')
+            print('socks5:127.0.0.1:1080:username:password:rdns')
             sys.exit(1)
-        proxy[2] = int(proxy[2])
+        proxyl[2] = int(proxyl[2])
         if proxyc == 5:
-            proxy[4] = not bool(proxy[4].lower() == 'false')
-        proxy = tuple(proxy)
+            proxyl[4] = not proxyl[4].lower() == 'false'
+        proxyt = tuple(proxyl)
 
-    Checkin(name, api_id, api_hash, proxy=proxy).start()
+    TerminusCheckin(name, api_id, api_hash, proxy=proxyt).start()
