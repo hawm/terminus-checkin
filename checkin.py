@@ -89,7 +89,7 @@ class TerminusCheckin():
         finally:
             self.logger.info('Checkin end')
 
-    async def _set_retry(self):
+    def _set_retry(self):
         self.logger.info('Retry flag has been set')
         self._retry_flag = True
 
