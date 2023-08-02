@@ -31,7 +31,7 @@ All about the command we run above:
 6. `name`: The session name be used. **Use the same name for the same Telegram account to reuse the session else you will need to signing in again.**
 7. `api_id` & `api_hash`: See https://core.telegram.org/api/obtaining_api_id, **please read it carefully**.
 8. `[proxy]`: This argument is optional. You can pass a proxy string to be used to communicate with Telegram. The proxy string must split with colons like
-`socks:127.0.0.1:1080` or `socks:127.0.0.1:username:password:rdns`, [more info](https://docs.telethon.dev/en/stable/basic/signing-in.html#signing-in-behind-a-proxy).
+`socks:127.0.0.1:1080` or `socks:127.0.0.1:1080:username:password:rdns`, [more info](https://docs.telethon.dev/en/stable/basic/signing-in.html#signing-in-behind-a-proxy).
 
 In real-world example:
 
@@ -45,7 +45,7 @@ docker run -it -v telethon-sessions:/app/sessions --rm akdoc/terminus-checkin he
 
 The Terminus will refresh the checkin state at every midnight of UTC+8. So combine this tool with cron so that we can checkin every day automatically.
 
-For example, add the below content to crontab, **please note without the `-it` option**: 
+For example, add the below content to crontab, **please note without the `-it` option**:
 
 ```sh
 0 5 * * * docker run -v telethon-sessions:/app/sessions --rm terminus-checkin name api_id api_hash [proxy]
