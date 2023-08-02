@@ -38,7 +38,7 @@ class TerminusCheckin():
 
     timeout = 15
     retry_interval = 30
-    retry_max = 5
+    retry_max = 3
 
     _retry_count = 0
     _retry_flag = False
