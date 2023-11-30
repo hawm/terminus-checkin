@@ -1,3 +1,5 @@
+⚠️ Not Available Now Since Terminus Updates Their Checkin Verification
+
 # Terminus Checkin
 
 A tool to help you do Terminus Telegram bot checkin automatically
